@@ -1,5 +1,6 @@
 # Test script for DirectPromptAgent class
-
+import sys, os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from workflow_agents.base_agents import DirectPromptAgent # TODO: 1 - Import the DirectPromptAgent class from BaseAgents
 import os
 from dotenv import load_dotenv

@@ -1,6 +1,7 @@
 # TODO: 1 - Import the KnowledgeAugmentedPromptAgent class from workflow_agents
+import sys, os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from workflow_agents.base_agents import KnowledgeAugmentedPromptAgent
-import os
 from dotenv import load_dotenv
 
 # Load environment variables from the .env file

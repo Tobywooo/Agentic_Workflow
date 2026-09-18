@@ -1,5 +1,6 @@
 # TODO: 1 - Import all required libraries, including the ActionPlanningAgent
-import os
+import sys, os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from dotenv import load_dotenv
 from workflow_agents.base_agents import ActionPlanningAgent
 # TODO: 2 - Load environment variables and define the openai_api_key variable with your OpenAI API key

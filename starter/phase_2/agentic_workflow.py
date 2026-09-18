@@ -36,10 +36,8 @@ knowledge_product_manager = (
     "The sentences always start with: As a "
     "Write several stories for the product spec below, where the personas are the different users of the product. "
     # TODO: 5 - Complete this knowledge string by appending the product_spec loaded in TODO 3
-    f"Product Specification:\n{product_spec}"
+    "Product Specification:\n{product_spec}"
 )
-print(f"Knowledge includes product spec: {'product_spec' not in knowledge_product_manager}")
-
 # TODO: 6 - Instantiate a product_manager_knowledge_agent using 'persona_product_manager' and the completed 'knowledge_product_manager'
 product_manager_knowledge_agent = KnowledgeAugmentedPromptAgent(openai_api_key, persona_product_manager, knowledge_product_manager)
 

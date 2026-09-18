@@ -1,6 +1,7 @@
 # TODO: 1 - Import EvaluationAgent and KnowledgeAugmentedPromptAgent classes
+import sys, os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from workflow_agents.base_agents import EvaluationAgent, KnowledgeAugmentedPromptAgent
-import os
 from dotenv import load_dotenv
 
 # Load environment variables
