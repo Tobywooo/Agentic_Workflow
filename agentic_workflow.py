@@ -193,7 +193,8 @@ workflow_prompt = """Create a comprehensive development plan for the Email Route
 # ****
 print(f"Task to complete in this workflow, workflow prompt = {workflow_prompt}")
 
-print("\nDefining workflow steps from the workflow prompt")
+print("\nRunning three-step workflow: Stories → Features → Tasks")
+results = {}
 # TODO: 12 - Implement the workflow.
 #   1. Use the 'action_planning_agent' to extract steps from the 'workflow_prompt'.
 #   2. Initialize an empty list to store 'completed_steps'.
@@ -202,30 +203,53 @@ print("\nDefining workflow steps from the workflow prompt")
 #      b. Append the result to 'completed_steps'.
 #      c. Print information about the step being executed and its result.
 #   4. After the loop, print the final output of the workflow (the last completed step).
-workflow_steps = action_planning_agent.extract_steps_from_prompt(workflow_prompt)
-completed_steps = []
+print("\n--- Step 1: User Stories ---")
+stories_query = (
+    "Write user stories for every persona in the Email Router product specification. "
+    "Every story MUST follow this exact format: "
+    "'As a [type of user], I want [an action or feature] so that [benefit/value].'"
+)
+results["stories"] = product_manager_support_function(stories_query)
+print(f"Result:\n{results['stories']}")
 
-for i, step in enumerate(workflow_steps, 1):
-    print(f"\nExecuting Step {i}: {step}")
-    if completed_steps:
-        prior_context = "\n\n".join(
-            f"--- Previously completed step {j+1} ---\n{r}"
-            for j, r in enumerate(completed_steps)
-        )
-        query = f"{step}\n\nUse the following previously generated results:\n{prior_context}"
-    else:
-        query = step
-    result = routing_agent.route(query)
-    completed_steps.append(result)
-    print(f"Result for Step {i}:\n{result}")
+print("\n--- Step 2: Product Features ---")
+features_query = (
+    "Group the following user stories into product features for the Email Router. "
+    "Each feature MUST include all four fields in this exact structure:\n"
+    "Feature Name: ...\n"
+    "Description: ...\n"
+    "Key Functionality: ...\n"
+    "User Benefit: ...\n\n"
+    f"User Stories:\n{results['stories']}"
+)
+results["features"] = program_manager_support_function(features_query)
+print(f"Result:\n{results['features']}")
 
-print("\n*** Final Workflow Output ***\n")
-if completed_steps:
-    step_labels = ["User Stories", "User Stories (Refined)", "Product Features", "Engineering Tasks"]
-    assembled = []
-    for i, result in enumerate(completed_steps):
-        label = step_labels[i] if i < len(step_labels) else f"Step {i+1}"
-        assembled.append(f"{'='*60}\n{label.upper()}\n{'='*60}\n{result}")
-    print("\n\n".join(assembled))
+print("\n--- Step 3: Engineering Tasks ---")
+tasks_query = (
+    "Create detailed engineering tasks to implement each Email Router feature. "
+    "Each task MUST include all seven fields in this exact structure:\n"
+    "Task ID: ...\n"
+    "Task Title: ...\n"
+    "Related User Story: ...\n"
+    "Description: ...\n"
+    "Acceptance Criteria: ...\n"
+    "Estimated Effort: ...\n"
+    "Dependencies: ...\n\n"
+    f"User Stories:\n{results['stories']}\n\n"
+    f"Product Features:\n{results['features']}"
+)
+results["tasks"] = development_engineer_support_function(tasks_query)
+print(f"Result:\n{results['tasks']}")
+
+missing = [k for k, v in results.items() if not v]
+if missing:
+    print(f"\nCannot print final plan — missing deliverables: {', '.join(missing)}")
 else:
-    print("No steps completed.")
+    final_sections = []
+    for key, label in [("stories", "USER STORIES"), ("features", "PRODUCT FEATURES"), ("tasks", "ENGINEERING TASKS")]:
+        final_sections.append(f"{'='*60}\n{label}\n{'='*60}\n{results[key]}")
+    final_output = "\n\n".join(final_sections)
+
+    print("\n*** Final Workflow Output ***\n")
+    print(final_output)
