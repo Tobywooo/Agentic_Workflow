@@ -55,7 +55,15 @@ product_manager_evaluation_agent = EvaluationAgent(
 )
 # Program Manager - Knowledge Augmented Prompt Agent
 persona_program_manager = "You are a Program Manager, you are responsible for defining the features for a product."
-knowledge_program_manager = "Features of a product are defined by organizing similar user stories into cohesive groups."
+knowledge_program_manager = (
+    "Features of a product are defined by organizing similar user stories into cohesive groups. "
+    "Each feature must use this exact structure:\n"
+    "Feature Name: A clear, concise title that identifies the capability\n"
+    "Description: A brief explanation of what the feature does and its purpose\n"
+    "Key Functionality: The specific capabilities or actions the feature provides\n"
+    "User Benefit: How this feature creates value for the user\n\n"
+    f"Product Specification:\n{product_spec}"
+)
 # Instantiate a program_manager_knowledge_agent using 'persona_program_manager' and 'knowledge_program_manager'
 # (This is a necessary step before TODO 8. Students should add the instantiation code here.)
 program_manager_knowledge_agent = KnowledgeAugmentedPromptAgent(openai_api_key, persona_program_manager, knowledge_program_manager)
@@ -86,7 +94,18 @@ program_manager_evaluation_agent = EvaluationAgent(
 )
 # Development Engineer - Knowledge Augmented Prompt Agent
 persona_dev_engineer = "You are a Development Engineer, you are responsible for defining the development tasks for a product."
-knowledge_dev_engineer = "Development tasks are defined by identifying what needs to be built to implement each user story."
+knowledge_dev_engineer = (
+    "Development tasks are defined by identifying what needs to be built to implement each user story. "
+    "Each task must use this exact structure:\n"
+    "Task ID: A unique identifier for tracking purposes\n"
+    "Task Title: Brief description of the specific development work\n"
+    "Related User Story: Reference to the parent user story\n"
+    "Description: Detailed explanation of the technical work required\n"
+    "Acceptance Criteria: Specific requirements that must be met for completion\n"
+    "Estimated Effort: Time or complexity estimation\n"
+    "Dependencies: Any tasks that must be completed first\n\n"
+    f"Product Specification:\n{product_spec}"
+)
 # Instantiate a development_engineer_knowledge_agent using 'persona_dev_engineer' and 'knowledge_dev_engineer'
 # (This is a necessary step before TODO 9. Students should add the instantiation code here.)
 development_engineer_knowledge_agent = KnowledgeAugmentedPromptAgent(openai_api_key, persona_dev_engineer, knowledge_dev_engineer)
@@ -188,9 +207,25 @@ completed_steps = []
 
 for i, step in enumerate(workflow_steps, 1):
     print(f"\nExecuting Step {i}: {step}")
-    result = routing_agent.route(step)
+    if completed_steps:
+        prior_context = "\n\n".join(
+            f"--- Previously completed step {j+1} ---\n{r}"
+            for j, r in enumerate(completed_steps)
+        )
+        query = f"{step}\n\nUse the following previously generated results:\n{prior_context}"
+    else:
+        query = step
+    result = routing_agent.route(query)
     completed_steps.append(result)
     print(f"Result for Step {i}:\n{result}")
 
 print("\n*** Final Workflow Output ***\n")
-print(completed_steps[-1] if completed_steps else "No steps completed.")
+if completed_steps:
+    step_labels = ["User Stories", "User Stories (Refined)", "Product Features", "Engineering Tasks"]
+    assembled = []
+    for i, result in enumerate(completed_steps):
+        label = step_labels[i] if i < len(step_labels) else f"Step {i+1}"
+        assembled.append(f"{'='*60}\n{label.upper()}\n{'='*60}\n{result}")
+    print("\n\n".join(assembled))
+else:
+    print("No steps completed.")
