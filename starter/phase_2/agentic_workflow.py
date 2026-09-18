@@ -36,8 +36,10 @@ knowledge_product_manager = (
     "The sentences always start with: As a "
     "Write several stories for the product spec below, where the personas are the different users of the product. "
     # TODO: 5 - Complete this knowledge string by appending the product_spec loaded in TODO 3
-    "Product Specification:\n{product_spec}"
+    f"Product Specification:\n{product_spec}"
 )
+print(f"Knowledge includes product spec: {'product_spec' not in knowledge_product_manager}")
+
 # TODO: 6 - Instantiate a product_manager_knowledge_agent using 'persona_product_manager' and the completed 'knowledge_product_manager'
 product_manager_knowledge_agent = KnowledgeAugmentedPromptAgent(openai_api_key, persona_product_manager, knowledge_product_manager)
 
@@ -53,7 +55,15 @@ product_manager_evaluation_agent = EvaluationAgent(
 )
 # Program Manager - Knowledge Augmented Prompt Agent
 persona_program_manager = "You are a Program Manager, you are responsible for defining the features for a product."
-knowledge_program_manager = "Features of a product are defined by organizing similar user stories into cohesive groups."
+knowledge_program_manager = (
+    "Features of a product are defined by organizing similar user stories into cohesive groups. "
+    "Each feature must use this exact structure:\n"
+    "Feature Name: A clear, concise title that identifies the capability\n"
+    "Description: A brief explanation of what the feature does and its purpose\n"
+    "Key Functionality: The specific capabilities or actions the feature provides\n"
+    "User Benefit: How this feature creates value for the user\n\n"
+    f"Product Specification:\n{product_spec}"
+)
 # Instantiate a program_manager_knowledge_agent using 'persona_program_manager' and 'knowledge_program_manager'
 # (This is a necessary step before TODO 8. Students should add the instantiation code here.)
 program_manager_knowledge_agent = KnowledgeAugmentedPromptAgent(openai_api_key, persona_program_manager, knowledge_program_manager)
@@ -84,7 +94,18 @@ program_manager_evaluation_agent = EvaluationAgent(
 )
 # Development Engineer - Knowledge Augmented Prompt Agent
 persona_dev_engineer = "You are a Development Engineer, you are responsible for defining the development tasks for a product."
-knowledge_dev_engineer = "Development tasks are defined by identifying what needs to be built to implement each user story."
+knowledge_dev_engineer = (
+    "Development tasks are defined by identifying what needs to be built to implement each user story. "
+    "Each task must use this exact structure:\n"
+    "Task ID: A unique identifier for tracking purposes\n"
+    "Task Title: Brief description of the specific development work\n"
+    "Related User Story: Reference to the parent user story\n"
+    "Description: Detailed explanation of the technical work required\n"
+    "Acceptance Criteria: Specific requirements that must be met for completion\n"
+    "Estimated Effort: Time or complexity estimation\n"
+    "Dependencies: Any tasks that must be completed first\n\n"
+    f"Product Specification:\n{product_spec}"
+)
 # Instantiate a development_engineer_knowledge_agent using 'persona_dev_engineer' and 'knowledge_dev_engineer'
 # (This is a necessary step before TODO 9. Students should add the instantiation code here.)
 development_engineer_knowledge_agent = KnowledgeAugmentedPromptAgent(openai_api_key, persona_dev_engineer, knowledge_dev_engineer)
@@ -165,11 +186,15 @@ routing_agent.agents = [
 print("\n*** Workflow execution started ***\n")
 # Workflow Prompt
 # ****
-workflow_prompt = "What would the development tasks for this product be?"
+workflow_prompt = """Create a comprehensive development plan for the Email Router product that includes:
+1. User stories for all personas mentioned in the product specification
+2. Product features grouped from those user stories  
+3. Development tasks for implementing the features"""
 # ****
 print(f"Task to complete in this workflow, workflow prompt = {workflow_prompt}")
 
-print("\nDefining workflow steps from the workflow prompt")
+print("\nRunning three-step workflow: Stories → Features → Tasks")
+results = {}
 # TODO: 12 - Implement the workflow.
 #   1. Use the 'action_planning_agent' to extract steps from the 'workflow_prompt'.
 #   2. Initialize an empty list to store 'completed_steps'.
@@ -178,14 +203,53 @@ print("\nDefining workflow steps from the workflow prompt")
 #      b. Append the result to 'completed_steps'.
 #      c. Print information about the step being executed and its result.
 #   4. After the loop, print the final output of the workflow (the last completed step).
-workflow_steps = action_planning_agent.extract_steps_from_prompt(workflow_prompt)
-completed_steps = []
+print("\n--- Step 1: User Stories ---")
+stories_query = (
+    "Write user stories for every persona in the Email Router product specification. "
+    "Every story MUST follow this exact format: "
+    "'As a [type of user], I want [an action or feature] so that [benefit/value].'"
+)
+results["stories"] = product_manager_support_function(stories_query)
+print(f"Result:\n{results['stories']}")
 
-for i, step in enumerate(workflow_steps, 1):
-    print(f"\nExecuting Step {i}: {step}")
-    result = routing_agent.route(step)
-    completed_steps.append(result)
-    print(f"Result for Step {i}:\n{result}")
+print("\n--- Step 2: Product Features ---")
+features_query = (
+    "Group the following user stories into product features for the Email Router. "
+    "Each feature MUST include all four fields in this exact structure:\n"
+    "Feature Name: ...\n"
+    "Description: ...\n"
+    "Key Functionality: ...\n"
+    "User Benefit: ...\n\n"
+    f"User Stories:\n{results['stories']}"
+)
+results["features"] = program_manager_support_function(features_query)
+print(f"Result:\n{results['features']}")
 
-print("\n*** Final Workflow Output ***\n")
-print(completed_steps[-1] if completed_steps else "No steps completed.")
+print("\n--- Step 3: Engineering Tasks ---")
+tasks_query = (
+    "Create detailed engineering tasks to implement each Email Router feature. "
+    "Each task MUST include all seven fields in this exact structure:\n"
+    "Task ID: ...\n"
+    "Task Title: ...\n"
+    "Related User Story: ...\n"
+    "Description: ...\n"
+    "Acceptance Criteria: ...\n"
+    "Estimated Effort: ...\n"
+    "Dependencies: ...\n\n"
+    f"User Stories:\n{results['stories']}\n\n"
+    f"Product Features:\n{results['features']}"
+)
+results["tasks"] = development_engineer_support_function(tasks_query)
+print(f"Result:\n{results['tasks']}")
+
+missing = [k for k, v in results.items() if not v]
+if missing:
+    print(f"\nCannot print final plan — missing deliverables: {', '.join(missing)}")
+else:
+    final_sections = []
+    for key, label in [("stories", "USER STORIES"), ("features", "PRODUCT FEATURES"), ("tasks", "ENGINEERING TASKS")]:
+        final_sections.append(f"{'='*60}\n{label}\n{'='*60}\n{results[key]}")
+    final_output = "\n\n".join(final_sections)
+
+    print("\n*** Final Workflow Output ***\n")
+    print(final_output)
