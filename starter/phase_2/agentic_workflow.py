@@ -140,18 +140,15 @@ development_engineer_evaluation_agent = EvaluationAgent(
 )
 
 def product_manager_support_function(query):
-    response = product_manager_knowledge_agent.respond(query)
-    evaluation = product_manager_evaluation_agent.evaluate(response)
+    evaluation = product_manager_evaluation_agent.evaluate(query)
     return evaluation['final_response']
 
 def program_manager_support_function(query):
-    response = program_manager_knowledge_agent.respond(query)
-    evaluation = program_manager_evaluation_agent.evaluate(response)
+    evaluation = program_manager_evaluation_agent.evaluate(query)
     return evaluation['final_response']
 
 def development_engineer_support_function(query):
-    response = development_engineer_knowledge_agent.respond(query)
-    evaluation = development_engineer_evaluation_agent.evaluate(response)
+    evaluation = development_engineer_evaluation_agent.evaluate(query)
     return evaluation['final_response']
 # Routing Agent
 # TODO: 10 - Instantiate a routing_agent. You will need to define a list of agent dictionaries (routes) for Product Manager, Program Manager, and Development Engineer. Each dictionary should contain 'name', 'description', and 'func' (linking to a support function). Assign this list to the routing_agent's 'agents' attribute.
